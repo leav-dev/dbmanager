@@ -10,13 +10,24 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.navigation.compose.composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
 import androidx.core.database.getStringOrNull
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
 import com.example.dbmanager.ui.theme.DbmanagerTheme
+
+sealed class Pantalla(val ruta: String){
+    object  Principal : Pantalla ("principal")
+}
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,11 +35,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             DbmanagerTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    DbManagerApp()
                 }
             }
         }
@@ -36,19 +47,17 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun DbManagerApp(){
+    // definimos el controlador de la navegacion
+    val navController = rememberNavController()
+    NavHost(navController = navController, startDestination = Pantalla.Principal.ruta){
+        composable(Pantalla.Principal.ruta) {PantallaPrincial(navController)}
+    }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun GreetingPreview() {
-    DbmanagerTheme {
-        Greeting("Android")
-    }
+fun PantallaPrincial(navController: NavController){
+
 }
 
 class DatabasOpenHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION){
@@ -87,6 +96,7 @@ class DatabasOpenHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NA
         db?.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
         onCreate(db)
     }
+
     fun insertUser(firstname: String, lastname: String, age: Int, gender: String, phone: String, email: String): Boolean{
         val db = writableDatabase
         val values = ContentValues().apply {
@@ -106,6 +116,7 @@ class DatabasOpenHelper(context: Context): SQLiteOpenHelper(context, DATABASE_NA
             return false
         }
     }
+
     fun getAllUsers():List<Map<String, Any>>{
         val db = readableDatabase
         val usersList = mutableListOf<Map<String, Any>>()
